@@ -1,0 +1,6 @@
+{
+    "name": "中国节假日日历 Card",
+    "render_readme": true,
+    "filename":"ch_calendar-card.js",
+    "country": ["CN"]
+  }
