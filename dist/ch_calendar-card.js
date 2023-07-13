@@ -1,9 +1,13 @@
-class ChineseCalendarCard extends Polymer.Element {
+const LitElement = Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
+const html = LitElement.prototype.html;
+const css = LitElement.prototype.css;
 
-  static get template() {
-    return Polymer.html`
-      <style>
-        :root {
+class ChineseCalendarCard extends LitElement {
+
+  static get styles() {
+
+    return css`
+        :host {
           --main-bg-color: linear-gradient(to bottom,#03a9f4,#68d0ff);
           --main-title-color: white;
           --ch-highlight-color: #03a9f4;
@@ -122,86 +126,99 @@ class ChineseCalendarCard extends Polymer.Element {
         .list_container {
           padding-bottom: 20px;
         }
-      </style>
+    `;
+  }
+
+   render() {
+    return html`
       <ha-card>
-        <div class="container" on-click="_moreInfo">
+        <div class="container" @click=${this._moreInfo}>
           <div style="align-items: baseline;">
-            <div class="title">[[title]]</div>
+            <div class="title">${this.title}</div>
           </div>
 
           <div class="date_solar">
-            [[attributes.solar]]
+            ${this.attributes.solar}
           </div>
 
           <div class="date_week">
-            <p class="icon_state" style="background: none, url([[getStateIcon(calendarEntity.state)]]) no-repeat; background-size: contain;"></p>
-            [[attributes.week]]
+            <p class="icon_state" style="background: none, url(${this.getStateIcon(this.calendarEntity.state)}) no-repeat; background-size: contain;"></p>
+            ${this.attributes.week}
           </div>
           <!--
           <div class="date_week">
-            [[calendarEntity.state]]，[[attributes.week]]
+            ${this.calendarEntity.state}，${this.attributes.week}
           </div>
           -->
           <div class="date_lunar">
-            [[attributes.lunar]]
+            ${this.attributes.lunar}
           </div>
           <div class="latest_title">距离</div>
-          <div class="latest_holiday">[[latestReminder.name]]</div>
-          <div class="latest_days">[[latestReminder.days]]</div>
-          <div class="latest_date">[[latestReminder.date]]</div>
+          <div class="latest_holiday">${this.latestReminder.name}</div>
+          <div class="latest_days">${this.latestReminder.days}</div>
+          <div class="latest_date">${this.latestReminder.date}</div>
         </div>
         <div class=list_container>
-          <template is="dom-repeat" items="{{reminderList}}">
-            <table class="table" border="0">
+          ${this.reminderList.map((item, index) => 
+            html`
+              <table class="table" border="0">
               <td class="icon_container">
-                <i class="icon" style="background: none, url([[getIcon(index)]]) no-repeat; background-size: contain;"></i>
+                <i class="icon" style="background: none, url(${this.getIcon(index)}) no-repeat; background-size: contain;"></i>
               </td>
+
               <td>
                 <table>
                   <tr>
-                    <td class="cell_name">{{item.name}}</td>
+                    <td class="cell_name">${item.name}</td>
                   </tr>
                   <tr>
-                    <td class="cell_date">{{item.date}}</td>
+                    <td class="cell_date">${item.date}</td>
                   </tr>
                 </table>
               </td>
-              <template is="dom-if" if="[[item.highlight]]">
+
+              ${item.highlight ? 
+                html` 
                 <td class="cell_day_h">
-                {{item.days}}
-                <template is="dom-if" if="[[item.unit]]">
-                  天
-                </template>
-              </td>
-              </template>
-              <template is="dom-if" if="[[!item.highlight]]">
+                ${item.days}
+                ${item.unit ? html`天` : html``}
+                </td>
+                ` : 
+                html`
                 <td class="cell_day_n">
-                {{item.days}}
-                <template is="dom-if" if="[[item.unit]]">
-                  天
-                </template>
-              </td>
-              </template>
+                ${item.days}
+                ${item.unit ? html`天` : html``}
+                </td>
+                `}
+
             </table>
-            <template is="dom-if" if="[[!item.hiddenLine]]">
-              <div style="float:right;width:90%;border-top:1px solid #f5f5f5;height:0.5px;"></div>
-            </template>
-          </template>
+            ${item.hiddenLine ? html`` : html`<div style="float:right;width:90%;border-top:1px solid #f5f5f5;height:0.5px;"></div>`}
+            `
+          )}
         </div>
 
       </ha-card>
     `;
   }
 
+  firstUpdated() {
+    super.firstUpdated();
+    console.log("firstUpdated");
+  }
+
+  updated(changedProperties) {
+    console.log("updated");
+  }
+
   static get properties() {
 
     return {
-      config: Object,
+      config: { type: Object },
       calendarEntity: {
         type: Object,
         observer: 'dataChanged',
       },
-      attributes: Object,
+      attributes: { type: Object },
     };
   }
 
@@ -333,11 +350,6 @@ class ChineseCalendarCard extends Polymer.Element {
 
   }
 
-  dataChanged() {
-    // this.HourlyForecastChartData = this.drawChart('hourly', this.hourlyForecast);
-    // this.DailyForecastChartData = this.drawChart('daily', this.dailyForecast);
-  }
-
 
   getIcon(index) {
     return `${
@@ -380,6 +392,7 @@ class ChineseCalendarCard extends Polymer.Element {
   }
 
   _moreInfo() {
+    console.log('moreInfo')
     this._fire('hass-more-info', { entityId: this.config.entity });
   }
 }
