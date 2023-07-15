@@ -10,7 +10,7 @@ class ChineseCalendarCard extends LitElement {
         :host {
           --main-bg-color: linear-gradient(to bottom,#03a9f4,#68d0ff);
           --main-title-color: white;
-          --ch-highlight-color: #03a9f4;
+          --ch-highlight-color: #68d0ff;
           --cell-title-color: #515151;
           --cell-date-color: #aaa;
         }
@@ -47,12 +47,19 @@ class ChineseCalendarCard extends LitElement {
         }
         .title {
           margin-left: 16px;
-          font-size: 16px;
+          font-size: 14px;
         }
+
+        .flex_container_center {
+          display: flex;
+          align-items: baseline;
+          justify-content: center;
+        }
+
         .date_solar {
           font-size: 30px;
           text-align: right;
-          margin-right: 20px;
+          margin-right: 17px;
           padding-top: 20px;
           color: var(--main-title-color);
         }
@@ -73,12 +80,13 @@ class ChineseCalendarCard extends LitElement {
           color: var(--main-title-color);
           font-size: 14px;
           text-align: center;
-          padding-top: 35px;
+          padding-top: 20px;
         }
         .latest_holiday {
           color: var(--main-title-color);
           font-size: 18px;
           text-align: center;
+          padding-top: 4px;
         }
         .latest_days {
           color: var(--main-title-color);
@@ -87,17 +95,25 @@ class ChineseCalendarCard extends LitElement {
           padding-top: 20px;
           padding-bottom: 16px;
         }
+
+        .latest_days_unit {
+
+          color: var(--main-title-color);
+          font-size: 14px;
+          margin-left: 2px;
+        }
+
         .latest_date {
           color: var(--main-title-color);
           font-size: 14px;
           text-align: center;
-          padding-bottom: 50px;
+          padding-bottom: 35px;
         }
         .cell_l {
           text-align: left;
         }
         .cell_name {
-          font-size: 16px;
+          font-size: 14px;
           color: var(--cell-title-color);
         }
         .cell_date {
@@ -106,12 +122,12 @@ class ChineseCalendarCard extends LitElement {
         }
         .cell_day_h {
           text-align: right;
-          font-size: 16px;
+          font-size: 14px;
           color: var(--ch-highlight-color);
         }
         .cell_day_n {
           text-align: right;
-          font-size: 16px;
+          font-size: 14px;
           color: var(--cell-title-color);          
         }
         .table {
@@ -122,6 +138,8 @@ class ChineseCalendarCard extends LitElement {
         }
         .container {
           background: var(--main-bg-color);
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
         }
         .list_container {
           padding-bottom: 20px;
@@ -136,11 +154,12 @@ class ChineseCalendarCard extends LitElement {
           <div style="align-items: baseline;">
             <div class="title">${this.title}</div>
           </div>
-
           <div class="date_solar">
             ${this.attributes.solar}
           </div>
-
+          <div class="date_solar">
+            ${this.currentTime}
+          </div>
           <div class="date_week">
             <p class="icon_state" style="background: none, url(${this.getStateIcon(this.calendarEntity.state)}) no-repeat; background-size: contain;"></p>
             ${this.attributes.week}
@@ -155,8 +174,15 @@ class ChineseCalendarCard extends LitElement {
           </div>
           <div class="latest_title">距离</div>
           <div class="latest_holiday">${this.latestReminder.name}</div>
-          <div class="latest_days">${this.latestReminder.days}</div>
-          <div class="latest_date">${this.latestReminder.date}</div>
+          <div class="flex_container_center">
+            <div class="latest_days">
+              ${this.latestReminder.days}
+            </div>
+            <div class="latest_days_unit">
+              天
+            </div>
+          </div>
+          <div class="latest_date">${this.dateFormatIfNeed(this.latestReminder.date)}</div>
         </div>
         <div class=list_container>
           ${this.reminderList.map((item, index) => 
@@ -172,7 +198,7 @@ class ChineseCalendarCard extends LitElement {
                     <td class="cell_name">${item.name}</td>
                   </tr>
                   <tr>
-                    <td class="cell_date">${item.date}</td>
+                    <td class="cell_date">${this.dateFormatIfNeed(item.date)}</td>
                   </tr>
                 </table>
               </td>
@@ -231,6 +257,18 @@ class ChineseCalendarCard extends LitElement {
 
   constructor() {
     super();
+    const options = {
+      hour: 'numeric',
+      minute: 'numeric',
+      second: 'numeric',
+    }
+    var d = new Date();
+    this.currentTime = d.toLocaleTimeString();
+    setInterval(() => {
+      var d = new Date();
+      this.currentTime = d.toLocaleTimeString();
+      this.requestUpdate();
+    }, 1000);
 
   }
 
@@ -350,6 +388,17 @@ class ChineseCalendarCard extends LitElement {
 
   }
 
+  //transfer yyyyMMdd to yyyy-MM-dd
+  dateFormatIfNeed(date_str) {
+    const regex = /^\d{4}(0[1-9]|1[0-2])(0[1-9]|[1-2]\d|3[01])$/;
+
+    if (regex.test(date_str)) {
+      const formattedDate = date_str.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3');
+      return formattedDate
+    } 
+
+    return date_str
+  }
 
   getIcon(index) {
     return `${
@@ -360,11 +409,11 @@ class ChineseCalendarCard extends LitElement {
   }
 
   getStateIcon(state) {
-	var stateIcons = [{state:'工作日', icon:'working'},{state:'休息日', icon:'dating'},{state:'节假日', icon:'vacation'}];
-	var iconName = "";
-	
-	stateIcons.forEach(function(item, index) {
-        if(item.state == state) {
+  	var stateIcons = [{state:'工作日', icon:'working'},{state:'休息日', icon:'dating'},{state:'节假日', icon:'vacation'}];
+  	var iconName = "";
+  	
+  	stateIcons.forEach(function(item, index) {
+          if(item.state == state) {
             iconName = item.icon;
             return true;
         }
