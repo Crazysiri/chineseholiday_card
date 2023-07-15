@@ -8,18 +8,18 @@ class ChineseCalendarCard extends LitElement {
 
     return css`
         :host {
-          --main-bg-color: linear-gradient(to bottom,#03a9f4,#68d0ff);
+          --main-bg-color: none /* 设置上半部分container背景颜色为none */
           --main-title-color: white;
-          --ch-highlight-color: #68d0ff;
-          --cell-title-color: #515151;
+          --ch-highlight-color: #03a9f4;
+          --cell-title-color: white; /* 设置下半部分list的左边文字颜色为白色 */
           --cell-date-color: #aaa;
         }
         .icon_container {
-          width: 40px;
+          width: 40px; /*设置下半部分倒计数字日期的数字与下文的空隙,从40到8 */
         }
         .icon {
-          width: 25px;
-          height: 25px;
+          width: 28px; /*设置下半部分左侧图标大小,从25到28 */
+          height: 28px; /*设置下半部分左侧图标大小,从25到28 */
           display: inline-block;
           vertical-align: middle;
           background-size: contain;
@@ -40,110 +40,128 @@ class ChineseCalendarCard extends LitElement {
           margin-left: 10px;
         }        
         .card {
-          padding: 0 18px 18px 18px;
+          padding: 0 18px 18px 18px; /* 设置,从18到8 */
         }
         .header div {
           display: flex;
         }
         .title {
           margin-left: 16px;
-          font-size: 14px;
+          font-size: 16px;
         }
 
         .flex_container_center {
           display: flex;
           align-items: baseline;
           justify-content: center;
-        }
+        }        
 
         .date_solar {
-          font-size: 30px;
+          font-size: 28px; /* 设置上半部分阳历日期的字体大小, 从30到28 */
           text-align: right;
-          margin-right: 17px;
-          padding-top: 20px;
-          color: var(--main-title-color);
+          color: white;
+          margin-right: 18px;
+          margin-top: 18px;
         }
         .date_week {
           font-size: 18px;
-          color: var(--main-title-color);
+          color: white;
           text-align: right;
-          margin-right: 20px;
+          margin-right: 18px;
+          margin-top: -18px;
         }
         .date_lunar {
           font-size: 14px;
-          color: var(--main-title-color);
+          color: white;
           text-align: right;
-          margin-right: 20px;
-          margin-top: -10px;
+          margin-right: 18px;
+          margin-top: -18px;
         }
         .latest_title {
-          color: var(--main-title-color);
+          color: white;
           font-size: 14px;
           text-align: center;
-          padding-top: 20px;
+          padding-top: 8px; /* 设置距离两字与上面信息之间的空隙,从35到28 */
         }
         .latest_holiday {
-          color: var(--main-title-color);
+          color: white;
           font-size: 18px;
           text-align: center;
-          padding-top: 4px;
+          padding-top: 4px; /* new */
         }
         .latest_days {
-          color: var(--main-title-color);
-          font-size: 45px;
+          color: var(--ch-highlight-color); /* 设置上半部分倒计数字天数的颜色, 为用下面列表数字一样的浅蓝色,原来是白色的 */
           text-align: center;
-          padding-top: 20px;
-          padding-bottom: 16px;
+          padding-top: 18px; /* 设置上半部分倒计数字天数的颜色与上文案间隙, 从20到18 */
+          padding-bottom: 0px; /* 设置上半部分倒计数字天数的颜色与下文案间隙 */
         }
-
-        .latest_days_unit {
-
-          color: var(--main-title-color);
-          font-size: 14px;
-          margin-left: 2px;
-        }
-
+        .days-number {
+          font-size: 68px; /* 设置上半部分倒计数字天数的字体大小 */
+          font-weight: bold;
+          display: bold;
+        }        
+        .days-text {
+          font-size: 12px; /* 设置上半部分倒计数字天数的天字的字体大小 */
+          color: white;
+        }      
+        
         .latest_date {
-          color: var(--main-title-color);
-          font-size: 14px;
+          color: white;
+          font-size: 16px; /* 设置上半部分倒计数字日期的数字字体大小 */
           text-align: center;
-          padding-bottom: 35px;
+          padding-bottom: 0px; /* 设置上半部分倒计数字日期的数字与下文的空隙 */
         }
         .cell_l {
           text-align: left;
         }
         .cell_name {
-          font-size: 14px;
-          color: var(--cell-title-color);
+          font-size: 16px;
+          color: white
+
         }
         .cell_date {
-          color: var(--cell-date-color);
           font-size: 14px;
+          color: rgba(255, 255, 255, 0.7); /* 设置为白色的70%透明度,0代表完全透明 */
+
         }
         .cell_day_h {
           text-align: right;
-          font-size: 14px;
+          padding-right: 12px;
+          font-size: 16px;
           color: var(--ch-highlight-color);
         }
         .cell_day_n {
           text-align: right;
-          font-size: 14px;
+          padding-right: 12px;
+          font-size: 16px;
           color: var(--cell-title-color);          
         }
         .table {
           width: 100%;
-          padding-right: 20px;
-          padding-top: 12px;
-          padding-bottom: 6px;
+          padding-right: 18px; /* 设置下半部分倒计数字日期的数字与下文的空隙,从20到8 */
+          padding-top: 8px; /* 设置下半部分倒计数字日期的数字与下文的空隙,从12到8 */
+          padding-bottom: 6px; /* 设置下半部分倒计数字日期的数字与下文的空隙,从6到8 */
+          padding: 1px;
         }
         .container {
           background: var(--main-bg-color);
-          border-top-left-radius: 8px;
-          border-top-right-radius: 8px;
+          border-top-left-radius: 8px; /* new */
+          border-top-right-radius: 8px;  /* new */
         }
         .list_container {
-          padding-bottom: 20px;
+          padding-bottom: 8px; /* 设置下半部分倒计数字日期的数字与下文的空隙,从20到8 */
         }
+        .clock {
+          margin-left: 18px;
+          font-size: 58px;
+          color: white;
+          text-align: left;
+          margin-top: 28px;
+        }
+        .timeanddate {
+          display: flex;
+          justify-content: space-between;
+        }  
     `;
   }
 
@@ -154,12 +172,14 @@ class ChineseCalendarCard extends LitElement {
           <div style="align-items: baseline;">
             <div class="title">${this.title}</div>
           </div>
-          <div class="date_solar">
-            ${this.attributes.solar}
-          </div>
-          <div class="date_solar">
+          <div class="timeanddate">
+            <div class="clock">
             ${this.currentTime}
-          </div>
+            </div>  
+            <div class="date_solar">
+              ${this.attributes.solar}
+            </div>
+          </div>  
           <div class="date_week">
             <p class="icon_state" style="background: none, url(${this.getStateIcon(this.calendarEntity.state)}) no-repeat; background-size: contain;"></p>
             ${this.attributes.week}
@@ -174,13 +194,10 @@ class ChineseCalendarCard extends LitElement {
           </div>
           <div class="latest_title">距离</div>
           <div class="latest_holiday">${this.latestReminder.name}</div>
-          <div class="flex_container_center">
-            <div class="latest_days">
-              ${this.latestReminder.days}
-            </div>
-            <div class="latest_days_unit">
-              天
-            </div>
+     
+          <div class="latest_days">
+          <span class="days-number">${this.latestReminder.days}</span>
+          <span class="days-text">天</span>
           </div>
           <div class="latest_date">${this.dateFormatIfNeed(this.latestReminder.date)}</div>
         </div>
@@ -258,15 +275,15 @@ class ChineseCalendarCard extends LitElement {
   constructor() {
     super();
     const options = {
-      hour: 'numeric',
+      hour: '2-digit',
       minute: 'numeric',
-      second: 'numeric',
+      second: 'none',
     }
     var d = new Date();
-    this.currentTime = d.toLocaleTimeString();
+    this.currentTime = d.toLocaleTimeString('en-US', {hour12: false,hour: '2-digit', minute:'2-digit'});
     setInterval(() => {
       var d = new Date();
-      this.currentTime = d.toLocaleTimeString();
+      this.currentTime = d.toLocaleTimeString('en-US', {hour12: false,hour: '2-digit', minute:'2-digit'});
       this.requestUpdate();
     }, 1000);
 
@@ -388,7 +405,7 @@ class ChineseCalendarCard extends LitElement {
 
   }
 
-  //transfer yyyyMMdd to yyyy-MM-dd
+    //transfer yyyyMMdd to yyyy-MM-dd
   dateFormatIfNeed(date_str) {
     const regex = /^\d{4}(0[1-9]|1[0-2])(0[1-9]|[1-2]\d|3[01])$/;
 
@@ -409,11 +426,11 @@ class ChineseCalendarCard extends LitElement {
   }
 
   getStateIcon(state) {
-  	var stateIcons = [{state:'工作日', icon:'working'},{state:'休息日', icon:'dating'},{state:'节假日', icon:'vacation'}];
-  	var iconName = "";
-  	
-  	stateIcons.forEach(function(item, index) {
-          if(item.state == state) {
+	var stateIcons = [{state:'工作日', icon:'working'},{state:'休息日', icon:'dating'},{state:'节假日', icon:'vacation'}];
+	var iconName = "";
+	
+	stateIcons.forEach(function(item, index) {
+        if(item.state == state) {
             iconName = item.icon;
             return true;
         }
@@ -448,3 +465,10 @@ class ChineseCalendarCard extends LitElement {
 
 
 customElements.define('ch_calendar-card', ChineseCalendarCard);
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "ch_calendar-card",
+  name: "中国节假日日历卡片",
+  preview: true, // Optional - defaults to false
+  description: "中国节假日日历卡片" // Optional
+});
