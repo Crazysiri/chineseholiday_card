@@ -346,6 +346,11 @@ class ChineseCalendarCard extends LitElement {
 
     }
 
+
+    if (beAdd) {
+      list.push(beAdd);
+    }
+
     if (attributes.hasOwnProperty('next_anniversaries')) {
         var next_anniversaries = attributes['next_anniversaries'];
         for (var i = 0; i < next_anniversaries.length;i++) {
@@ -354,10 +359,6 @@ class ChineseCalendarCard extends LitElement {
         }    
     }
 
-
-    if (beAdd) {
-      list.push(beAdd);
-    }
 
     if (attributes.hasOwnProperty('future_dates')) {
       var future_dates = attributes['future_dates'];
