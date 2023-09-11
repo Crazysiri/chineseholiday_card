@@ -9,5 +9,6 @@
 2. 调整时钟的位置和格式.
 3. 调整部分间距,让卡片内容看起来更紧凑些.
 4. 新增问候语部分
+
 配合插件一起使用. 这只是一个卡片.
 https://github.com/Crazysiri/chineseholiday
