@@ -1,461 +1,1090 @@
+/**
+ * ch_calendar-card - 中国节假日日历卡片
+ * 基于 Lit，适配 Home Assistant 2023.5+
+ * 简约现代设计，完全使用 HA CSS 变量，支持深/浅色主题
+ */
+
 const LitElement = Object.getPrototypeOf(customElements.get("ha-panel-lovelace"));
 const html = LitElement.prototype.html;
 const css = LitElement.prototype.css;
 
+const STATE_ICON = {
+  工作日: "mdi:briefcase-outline",
+  休息日: "mdi:sofa-outline",
+  节假日: "mdi:beach",
+};
+
+const STATE_COLOR = {
+  工作日: "var(--info-color, #039be5)",
+  休息日: "var(--success-color, #4caf50)",
+  节假日: "var(--warning-color, #ff9800)",
+};
+
 class ChineseCalendarCard extends LitElement {
-
   static get styles() {
-
     return css`
+      :host {
+        --card-radius: 20px;
+        --spacing: 18px;
+        --accent-color: var(--primary-color, #3b82f6);
+        --accent-strong: color-mix(in srgb, var(--accent-color) 82%, #0f172a);
+        --accent-soft: color-mix(in srgb, var(--accent-color) 16%, transparent);
+        --surface-soft: color-mix(in srgb, var(--card-background-color, #fff) 92%, var(--accent-color));
+        --hero-text: #ffffff;
+        --hero-subtle: rgba(255, 255, 255, 0.82);
+        --chip-bg: rgba(255, 255, 255, 0.14);
+        --chip-border: rgba(255, 255, 255, 0.18);
+      }
+
+      ha-card {
+        overflow: hidden;
+        border-radius: var(--ha-card-border-radius, var(--card-radius));
+        background:
+          radial-gradient(circle at top right, color-mix(in srgb, var(--accent-color) 18%, transparent), transparent 34%),
+          linear-gradient(180deg, color-mix(in srgb, var(--card-background-color, #fff) 96%, var(--accent-color)), var(--card-background-color, #fff) 38%);
+        box-shadow:
+          0 16px 40px rgba(15, 23, 42, 0.08),
+          0 2px 10px rgba(15, 23, 42, 0.06);
+      }
+
+      .hero {
+        position: relative;
+        padding: 22px var(--spacing) 18px;
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 28%),
+          radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.22), transparent 36%),
+          linear-gradient(135deg, color-mix(in srgb, var(--accent-color) 72%, #0f172a), color-mix(in srgb, var(--accent-color) 88%, #38bdf8));
+        color: var(--hero-text);
+        cursor: pointer;
+        user-select: none;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+        pointer-events: none;
+      }
+
+      .hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .date-solar {
+        font-size: clamp(30px, 7vw, 42px);
+        font-weight: 700;
+        line-height: 1.02;
+        letter-spacing: -0.04em;
+        text-shadow: 0 2px 12px rgba(15, 23, 42, 0.18);
+      }
+
+      .date-lunar {
+        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--hero-subtle);
+      }
+
+      .date-week {
+        margin-top: 4px;
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.96);
+      }
+
+      .time-block {
+        text-align: right;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        backdrop-filter: blur(10px);
+        min-width: 104px;
+      }
+
+      .time-now {
+        font-size: 26px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.04em;
+      }
+
+      .week-num {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--hero-subtle);
+        text-align: right;
+      }
+
+      .hero-bottom {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+      }
+
+      .state-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 34px;
+        padding: 6px 12px 6px 10px;
+        border-radius: 999px;
+        background: var(--chip-bg);
+        border: 1px solid var(--chip-border);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1;
+        backdrop-filter: blur(10px);
+      }
+
+      .state-badge ha-icon {
+        --mdc-icon-size: 16px;
+      }
+
+      .tomorrow-state {
+        margin-left: 2px;
+        padding-left: 8px;
+        border-left: 1px solid rgba(255, 255, 255, 0.22);
+        color: var(--hero-subtle);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .tag {
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(8px);
+      }
+
+      .countdown {
+        margin: 14px var(--spacing) 0;
+        padding: 18px;
+        border: 1px solid color-mix(in srgb, var(--divider-color, rgba(0, 0, 0, 0.08)) 72%, transparent);
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--card-background-color, #fff) 84%, var(--accent-color)), var(--card-background-color, #fff));
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .countdown-days {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        font-size: clamp(44px, 10vw, 58px);
+        font-weight: 700;
+        line-height: 1;
+        color: var(--accent-strong);
+        font-variant-numeric: tabular-nums;
+        min-width: 96px;
+        letter-spacing: -0.05em;
+      }
+
+      .countdown-unit {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+      }
+
+      .countdown-info {
+        min-width: 0;
+      }
+
+      .countdown-label {
+        font-size: 12px;
+        color: var(--secondary-text-color);
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+
+      .countdown-name {
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+        line-height: 1.2;
+      }
+
+      .countdown-date {
+        margin-top: 6px;
+        font-size: 14px;
+        color: var(--secondary-text-color);
+      }
+
+      .list {
+        padding: 14px var(--spacing) 4px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .section {
+        padding: 16px var(--spacing) 2px;
+      }
+
+      .section + .section {
+        padding-top: 8px;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        padding: 0 2px;
+      }
+
+      .section-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent-color);
+        box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-color) 14%, transparent);
+      }
+
+      .section-title {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--secondary-text-color);
+      }
+
+      .list-item {
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 18px;
+        background: color-mix(in srgb, var(--card-background-color, #fff) 94%, var(--accent-color));
+        border: 1px solid color-mix(in srgb, var(--divider-color, rgba(0, 0, 0, 0.08)) 72%, transparent);
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.04);
+      }
+
+      .item-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: var(--accent-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .item-icon ha-icon {
+        --mdc-icon-size: 18px;
+        color: var(--primary-color);
+      }
+
+      .item-body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .item-name {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--primary-text-color);
+        line-height: 1.3;
+        word-break: break-word;
+      }
+
+      .item-sub {
+        margin-top: 6px;
+        font-size: 13px;
+        color: var(--secondary-text-color);
+        line-height: 1.4;
+        word-break: break-word;
+      }
+
+      .item-days {
+        justify-self: end;
+        max-width: min(38vw, 280px);
+        padding: 8px 10px;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--accent-color) 10%, transparent);
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.35;
+        color: var(--accent-strong);
+        white-space: normal;
+        text-align: right;
+        flex-shrink: 0;
+      }
+
+      .item-days.normal {
+        background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+        color: var(--primary-text-color);
+        font-weight: 500;
+      }
+
+      .holiday-info {
+        margin: 10px var(--spacing) var(--spacing);
+        padding: 16px 18px;
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--card-background-color, #fff) 90%, var(--accent-color)), var(--card-background-color, #fff));
+        border: 1px solid color-mix(in srgb, var(--divider-color, rgba(0, 0, 0, 0.08)) 72%, transparent);
+        font-size: 14px;
+        color: var(--primary-text-color);
+        line-height: 1.75;
+        white-space: normal;
+      }
+
+      .holiday-info-title {
+        margin-bottom: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: var(--secondary-text-color);
+      }
+
+      .holiday-info-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .holiday-info-row {
+        position: relative;
+        display: grid;
+        grid-template-columns: 120px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+        padding: 14px 14px 14px 18px;
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--card-background-color, #fff) 90%, var(--accent-color));
+        border: 1px solid color-mix(in srgb, var(--divider-color, rgba(0, 0, 0, 0.08)) 72%, transparent);
+        overflow: hidden;
+      }
+
+      .holiday-info-row::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, var(--accent-color), color-mix(in srgb, var(--accent-color) 55%, #ffffff));
+      }
+
+      .holiday-info-label {
+        display: inline-flex;
+        align-items: center;
+        align-self: center;
+        justify-self: start;
+        min-height: 32px;
+        padding: 0 12px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--accent-strong);
+        background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+        white-space: nowrap;
+      }
+
+      .holiday-info-value {
+        font-size: 14px;
+        color: var(--primary-text-color);
+        line-height: 1.75;
+        word-break: break-word;
+      }
+
+      .holiday-info-row.full {
+        grid-template-columns: 1fr;
+        padding: 16px 16px 16px 18px;
+        background:
+          linear-gradient(135deg, color-mix(in srgb, var(--card-background-color, #fff) 76%, var(--accent-color)), color-mix(in srgb, var(--card-background-color, #fff) 92%, var(--accent-color)));
+      }
+
+      .holiday-info-row.full .holiday-info-value {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1.5;
+      }
+
+      .holiday-plan-list {
+        padding: 14px;
+        border-radius: 18px;
+        background:
+          linear-gradient(180deg, color-mix(in srgb, var(--card-background-color, #fff) 88%, var(--accent-color)), color-mix(in srgb, var(--card-background-color, #fff) 96%, var(--accent-color)));
+        border: 1px solid color-mix(in srgb, var(--divider-color, rgba(0, 0, 0, 0.08)) 72%, transparent);
+      }
+
+      .holiday-plan-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .holiday-plan-label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 30px;
+        padding: 0 12px;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--accent-color) 14%, transparent);
+        color: var(--accent-strong);
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .holiday-plan-total {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--primary-text-color);
+        white-space: nowrap;
+      }
+
+      .holiday-plan-calendar {
+        display: grid;
+        gap: 14px;
+      }
+
+      .holiday-plan-weekdays,
+      .holiday-plan-days {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .holiday-plan-weekday {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+      }
+
+      .holiday-plan-day {
+        min-width: 0;
+        min-height: 52px;
+        padding: 8px 6px;
+        border-radius: 14px;
+        text-align: center;
+        border: 1px solid transparent;
+        position: relative;
+        z-index: 1;
+      }
+
+      .holiday-plan-day.leave {
+        background: color-mix(in srgb, var(--warning-color, #f59e0b) 16%, transparent);
+        border-color: color-mix(in srgb, var(--warning-color, #f59e0b) 24%, transparent);
+      }
+
+      .holiday-plan-day.holiday {
+        background: color-mix(in srgb, var(--success-color, #22c55e) 16%, transparent);
+        border-color: color-mix(in srgb, var(--success-color, #22c55e) 24%, transparent);
+      }
+
+      .holiday-plan-day.rest {
+        background: color-mix(in srgb, var(--accent-color) 12%, transparent);
+        border-color: color-mix(in srgb, var(--accent-color) 18%, transparent);
+      }
+
+      .holiday-plan-day.work {
+        background: color-mix(in srgb, var(--secondary-text-color) 8%, transparent);
+        border-color: color-mix(in srgb, var(--secondary-text-color) 12%, transparent);
+      }
+
+      .holiday-plan-day-date {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--primary-text-color);
+      }
+
+      .holiday-plan-day-tag {
+        margin-top: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--secondary-text-color);
+      }
+
+      .holiday-plan-summary {
+        margin-top: 12px;
+        font-size: 14px;
+        color: var(--primary-text-color);
+        line-height: 1.7;
+      }
+
+      .holiday-plan-summary strong {
+        color: var(--accent-strong);
+      }
+
+      .holiday-info-plain {
+        font-size: 14px;
+        color: var(--primary-text-color);
+        line-height: 1.75;
+        white-space: pre-wrap;
+      }
+
+      @media (max-width: 480px) {
         :host {
-          --main-bg-color: linear-gradient(to bottom,#03a9f4,#68d0ff);
-          --main-title-color: white;
-          --ch-highlight-color: #68d0ff;
-          --cell-title-color: #515151;
-          --cell-date-color: #aaa;
-        }
-        .icon_container {
-          width: 40px;
-        }
-        .icon {
-          width: 25px;
-          height: 25px;
-          display: inline-block;
-          vertical-align: middle;
-          background-size: contain;
-          background-position: center center;
-          background-repeat: no-repeat;
-          text-indent: -9999px;
-          margin-left: 10px;
-        }
-        .icon_state {
-          width: 20px;
-          height: 20px;
-          display: inline-block;
-          vertical-align: middle;
-          background-size: contain;
-          background-position: center center;
-          background-repeat: no-repeat;
-          text-indent: -9999px;
-          margin-left: 10px;
-        }        
-        .card {
-          padding: 0 18px 18px 18px;
-        }
-        .header div {
-          display: flex;
-        }
-        .title {
-          margin-left: 16px;
-          font-size: 14px;
+          --spacing: 14px;
+          --card-radius: 18px;
         }
 
-        .flex_container_center {
-          display: flex;
-          align-items: baseline;
-          justify-content: center;
+        .hero-top,
+        .countdown,
+        .list-item {
+          grid-template-columns: none;
         }
 
-        .date_solar {
-          font-size: 30px;
-          text-align: right;
-          margin-right: 17px;
-          padding-top: 20px;
-          color: var(--main-title-color);
-        }
-        .date_week {
-          font-size: 18px;
-          color: var(--main-title-color);
-          text-align: right;
-          margin-right: 20px;
-        }
-        .date_lunar {
-          font-size: 14px;
-          color: var(--main-title-color);
-          text-align: right;
-          margin-right: 20px;
-          margin-top: -10px;
-        }
-        .date_weak_number {
-          font-size: 14px;
-          color: var(--main-title-color);
-          text-align: right;
-          margin-right: 20px;
-          margin-top: 5px;
-        }        
-        .latest_title {
-          color: var(--main-title-color);
-          font-size: 14px;
-          text-align: center;
-          padding-top: 20px;
-        }
-        .latest_holiday {
-          color: var(--main-title-color);
-          font-size: 18px;
-          text-align: center;
-          padding-top: 4px;
-        }
-        .latest_days {
-          color: var(--main-title-color);
-          font-size: 45px;
-          text-align: center;
-          padding-top: 20px;
-          padding-bottom: 16px;
+        .hero-top,
+        .countdown {
+          flex-direction: column;
+          align-items: flex-start;
         }
 
-        .latest_days_unit {
-
-          color: var(--main-title-color);
-          font-size: 14px;
-          margin-left: 2px;
+        .time-block {
+          text-align: left;
+          min-width: 0;
         }
 
-        .latest_date {
-          color: var(--main-title-color);
-          font-size: 14px;
-          text-align: center;
-          padding-bottom: 35px;
-        }
-        .cell_l {
+        .week-num {
           text-align: left;
         }
-        .cell_name {
-          font-size: 14px;
-          color: var(--cell-title-color);
+
+        .countdown-days {
+          min-width: 0;
         }
-        .cell_date {
-          color: var(--cell-date-color);
-          font-size: 14px;
+
+        .list-item {
+          grid-template-columns: 44px minmax(0, 1fr);
         }
-        .cell_day_h {
-          text-align: right;
-          font-size: 14px;
-          color: var(--ch-highlight-color);
+
+        .item-days {
+          grid-column: 1 / -1;
+          justify-self: stretch;
+          max-width: none;
+          text-align: left;
         }
-        .cell_day_n {
-          text-align: right;
-          font-size: 14px;
-          color: var(--cell-title-color);          
+
+        .holiday-info-row {
+          grid-template-columns: 1fr;
+          gap: 8px;
         }
-        .table {
-          width: 100%;
-          padding-right: 20px;
-          padding-top: 12px;
-          padding-bottom: 6px;
+
+        .holiday-info-label {
+          min-height: 28px;
+          padding: 0 10px;
         }
-        .container {
-          background: var(--main-bg-color);
-          border-top-left-radius: 8px;
-          border-top-right-radius: 8px;
+
+        .holiday-plan-top,
+        .holiday-plan-calendar {
+          display: grid;
         }
-        .list_container {
-          padding-bottom: 20px;
+
+        .holiday-plan-weekdays,
+        .holiday-plan-days {
+          gap: 6px;
         }
+
+        .holiday-plan-day {
+          min-height: 46px;
+          padding: 6px 4px;
+        }
+
+        .holiday-plan-day-date {
+          font-size: 13px;
+        }
+
+      }
     `;
-  }
-
-   render() {
-    return html`
-      <ha-card>
-        <div class="container" @click=${this._moreInfo}>
-          <div style="align-items: baseline;">
-            <div class="title">${this.title}</div>
-          </div>
-          <div class="date_solar">
-            ${this.attributes.solar}
-          </div>
-          <div class="date_solar">
-            ${this.currentTime}
-          </div>
-          <div class="date_week">
-            <p class="icon_state" style="background: none, url(${this.getStateIcon(this.calendarEntity.state)}) no-repeat; background-size: contain;"></p>
-            ${this.attributes.week}
-          </div>
-          <!--
-          <div class="date_week">
-            ${this.calendarEntity.state}，${this.attributes.week}
-          </div>
-          -->
-          <div class="date_lunar">
-            ${this.attributes.lunar}
-          </div>  
-          <div class="date_weak_number">
-            第${this.attributes.week_number}周
-          </div>                  
-          <div class="latest_title">距离</div>
-          <div class="latest_holiday">${this.latestReminder.name}</div>
-          <div class="flex_container_center">
-            <div class="latest_days">
-              ${this.latestReminder.days}
-            </div>
-            <div class="latest_days_unit">
-              天
-            </div>
-          </div>
-          <div class="latest_date">${this.dateFormatIfNeed(this.latestReminder.date)}</div>
-        </div>
-        <div class=list_container>
-          ${this.reminderList.map((item, index) => 
-            html`
-              <table class="table" border="0">
-              <td class="icon_container">
-                <i class="icon" style="background: none, url(${this.getIcon(index)}) no-repeat; background-size: contain;"></i>
-              </td>
-
-              <td>
-                <table>
-                  <tr>
-                    <td class="cell_name">${item.name}</td>
-                  </tr>
-                  <tr>
-                    <td class="cell_date">${this.dateFormatIfNeed(item.date)}</td>
-                  </tr>
-                </table>
-              </td>
-
-              ${item.highlight ? 
-                html` 
-                <td class="cell_day_h">
-                ${item.days}
-                ${item.unit ? html`天` : html``}
-                </td>
-                ` : 
-                html`
-                <td class="cell_day_n">
-                ${item.days}
-                ${item.unit ? html`天` : html``}
-                </td>
-                `}
-
-            </table>
-            ${item.hiddenLine ? html`` : html`<div style="float:right;width:90%;border-top:1px solid #f5f5f5;height:0.5px;"></div>`}
-            `
-          )}
-        </div>
-
-      </ha-card>
-    `;
-  }
-
-  firstUpdated() {
-    super.firstUpdated();
-    console.log("firstUpdated");
-  }
-
-  updated(changedProperties) {
-    console.log("updated");
   }
 
   static get properties() {
-
     return {
       config: { type: Object },
-      calendarEntity: {
-        type: Object,
-        observer: 'dataChanged',
-      },
-      attributes: { type: Object },
+      _hass: { type: Object },
+      _time: { type: String },
     };
+  }
+
+  constructor() {
+    super();
+    this._time = new Date().toLocaleTimeString("zh-CN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+    setInterval(() => {
+      this._time = new Date().toLocaleTimeString("zh-CN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
+    }, 1000);
   }
 
   setConfig(config) {
     if (!config.entity) {
-      throw new Error('Please define "calendar" entity in the card config');
+      throw new Error('请在卡片配置中指定 "entity" 字段');
     }
     this.config = config;
-   }
-
-  constructor() {
-    super();
-    const options = {
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-    }
-    var d = new Date();
-    this.currentTime = d.toLocaleTimeString();
-    setInterval(() => {
-      var d = new Date();
-      this.currentTime = d.toLocaleTimeString();
-      this.requestUpdate();
-    }, 1000);
-
   }
 
   set hass(hass) {
     this._hass = hass;
-    // this.lang = this._hass.selectedLanguage || this._hass.language;
-    this.calendarEntity = this.config.entity in hass.states ? hass.states[this.config.entity] : null;
-    if (!this.calendarEntity) {
-      return;
-    }
-    var list = [];
-    var attributes = this.calendarEntity.attributes['data'];
-    if (!attributes) {
-      return;
-    }
-    this.attributes = attributes;
-    // attributes['term'] = '春分';
-    // attributes['festival'] = '春节';
-    // attributes['anniversary'] = 'cc纪念日';
-    
-    // attributes['nearest_anniversary'] = 'aa生日';
-    // attributes['nearest_anniversary_date'] = '20200627';
-    // attributes['nearest_anniversary_days'] = 130;
-    
-    // attributes['nearest_holiday'] = '端午节';
-    // attributes['nearest_holiday_date'] = '2020-11-11';
-    // attributes['nearest_holiday_days'] = 10;
+  }
 
-    // attributes['calculate_age_past'] = 'aa和bb纪念日';
-    // attributes['calculate_age_past_date'] = '1900-01-01';
-    // attributes['calculate_age_past_interval'] = '20001010101';
-    // attributes['calculate_age_past_description'] = '2年2月2日2小时2分2秒';
+  get _entity() {
+    return this._hass?.states[this.config?.entity];
+  }
 
-    // attributes['calculate_age_future'] = 'aa和bb纪念日';
-    // attributes['calculate_age_future_date'] = '2030-01-01';
-    // attributes['calculate_age_future_interval'] = '20001010101';
-    // attributes['calculate_age_future_description'] = '2年2月2日2小时2分2秒';
+  get _attrs() {
+    return this._entity?.attributes?.data || {};
+  }
 
-
-    if (attributes['term']) {
-      list.push({'name':'节气','date':'今天','days':attributes['term']});
+  render() {
+    if (!this._entity) {
+      return html`<ha-card><div style="padding:16px;color:var(--error-color)">找不到实体：${this.config?.entity}</div></ha-card>`;
     }
 
-    if (attributes['festival']) {
-      list.push({'name':'节假日','date':'今天','days':attributes['festival']});
+    const attrs = this._attrs;
+    const state = this._entity.state;
+
+    // 标签（节气 / 节日 / 纪念日）
+    const tags = [];
+    if (attrs.term) tags.push(attrs.term);
+    if (attrs.festival) tags.push(attrs.festival);
+    if (attrs.anniversary) tags.push(attrs.anniversary);
+
+    // 最近倒计时
+    const latestReminder = this._getLatestReminder(attrs);
+
+    // 分组事件列表
+    const sections = this._buildSections(attrs);
+
+    return html`
+      <ha-card>
+        <!-- 顶部 Hero -->
+        <div class="hero" @click=${this._moreInfo}>
+          <div class="hero-top">
+            <div class="date-block">
+              <div class="date-solar">${attrs.solar || ""}</div>
+              <div class="date-lunar">${attrs.lunar || ""}</div>
+              <div class="date-week">${attrs.week || ""}</div>
+            </div>
+            <div class="time-block">
+              <div class="time-now">${this._time}</div>
+              <div class="week-num">第 ${attrs.week_number || "--"} 周</div>
+            </div>
+          </div>
+
+          <div class="hero-bottom">
+            <div class="state-badge">
+              <ha-icon icon="${this._stateIcon(state)}"></ha-icon>
+              <span>${state}</span>
+              ${attrs.tomorrow_state ? html`<span class="tomorrow-state">明天 ${attrs.tomorrow_state}</span>` : ""}
+            </div>
+
+            ${tags.length ? html`
+              <div class="tags">
+                ${tags.map(t => html`<span class="tag">${t}</span>`)}
+              </div>
+            ` : ""}
+          </div>
+        </div>
+
+        <!-- 倒计时主区 -->
+        ${latestReminder ? html`
+          <div class="countdown" @click=${this._moreInfo}>
+            <div class="countdown-days">
+              ${latestReminder.days}<span class="countdown-unit">天</span>
+            </div>
+            <div class="countdown-info">
+              <div class="countdown-label">距离</div>
+              <div class="countdown-name">${latestReminder.name}</div>
+              <div class="countdown-date">${this._fmtDate(latestReminder.date)}</div>
+            </div>
+          </div>
+        ` : ""}
+
+        <!-- 分组事件列表 -->
+        ${sections.map(section => this._renderSection(section))}
+
+        <!-- 假期安排详情 -->
+        ${attrs.holiday_info_detail || attrs.holiday_info ? html`
+          <div class="holiday-info">
+            <div class="holiday-info-title">${this._getHolidayInfoTitle(attrs)}</div>
+            ${this._renderHolidayInfo(attrs.holiday_info_detail || attrs.holiday_info)}
+          </div>
+        ` : ""}
+      </ha-card>
+    `;
+  }
+
+  _renderSection(section) {
+    return html`
+      <div class="section">
+        <div class="section-header">
+          <span class="section-dot"></span>
+          <div class="section-title">${section.title}</div>
+        </div>
+        <div class="list">
+          ${section.items.map((item, index) => this._renderItem(item, index))}
+        </div>
+      </div>
+    `;
+  }
+
+  _renderItem(item, index) {
+    const icons = [
+      "mdi:calendar-star",
+      "mdi:cake-variant-outline",
+      "mdi:heart-outline",
+      "mdi:gift-outline",
+      "mdi:party-popper",
+      "mdi:calendar-check-outline",
+      "mdi:bell-outline",
+      "mdi:star-outline",
+    ];
+    const icon = item.icon || icons[index % icons.length];
+
+    return html`
+      <div class="list-item">
+        <div class="item-icon">
+          <ha-icon icon="${icon}"></ha-icon>
+        </div>
+        <div class="item-body">
+          <div class="item-name">${item.name}</div>
+          ${item.sub ? html`<div class="item-sub">${item.sub}</div>` : ""}
+        </div>
+        ${item.days !== undefined ? html`
+          <div class="item-days ${item.highlight ? "" : "normal"}">${item.days}${item.unit || ""}</div>
+        ` : ""}
+      </div>
+    `;
+  }
+
+  _getLatestReminder(attrs) {
+    let reminder = null;
+
+    if (attrs.nearest_holiday) {
+      reminder = {
+        name: attrs.nearest_holiday,
+        date: attrs.nearest_holiday_date,
+        days: attrs.nearest_holiday_days,
+      };
     }
-
-    if (attributes['anniversary']) {
-      list.push({'name':'纪念日','date':'今天','days':attributes['anniversary']});
+    if (attrs.nearest_anniversary) {
+      const ann = {
+        name: attrs.nearest_anniversary,
+        date: attrs.nearest_anniversary_date,
+        days: attrs.nearest_anniversary_days,
+      };
+      if (!reminder || ann.days < reminder.days) {
+        reminder = ann;
+      }
     }
+    return reminder;
+  }
 
+  _buildSections(attrs) {
+    const upcoming = [];
+    const countdowning = [];
+    const elapsed = [];
 
-    if (attributes['tomorrow_state']) {
-      list.push({'name':'状态','date':'明天','days':attributes['tomorrow_state']});
-    }
-
-    var holiday_days = 0,anniversary_days = 0;
-    var beAdd;
-    if (attributes['nearest_holiday']) {
-      var obj = {'name':attributes['nearest_holiday'],'date':attributes['nearest_holiday_date'],'days':attributes['nearest_holiday_days'],'unit':'天','highlight':true};
-        this.latestReminder = obj;
-    }
-    if (attributes['nearest_anniversary']) {
-      var obj = {'name':attributes['nearest_anniversary'],'date':attributes['nearest_anniversary_date'],'days':attributes['nearest_anniversary_days'],'unit':'天','highlight':true};
-        if (this.latestReminder) {
-          if (this.latestReminder['days'] > obj['days']) {
-            beAdd = this.latestReminder;
-            this.latestReminder = obj;
-          } else {
-            beAdd = obj;
-          }
-        } else {
-          this.latestReminder = obj;
-        }
-
-    }
-
-
-    if (beAdd) {
-      list.push(beAdd);
-    }
-
-    if (attributes.hasOwnProperty('next_anniversaries')) {
-        var next_anniversaries = attributes['next_anniversaries'];
-        for (var i = 0; i < next_anniversaries.length;i++) {
-          var dict = next_anniversaries[i];
-	      list.push({'name':dict['name'],'date':dict['date'],'days':dict['days'],'unit':'天','highlight':true});
-        }    
-    }
-
-
-    if (attributes.hasOwnProperty('future_dates')) {
-      var future_dates = attributes['future_dates'];
-      for (var i = 0; i < future_dates.length;i++) {
-        var dict = future_dates[i];
-        list.push({'name':dict['name'],'date':dict['date'],'days':dict['description'],'highlight':true});
+    // 次要倒计时（另一个比最近倒计时远的）
+    if (attrs.nearest_holiday && attrs.nearest_anniversary) {
+      const hDays = attrs.nearest_holiday_days;
+      const aDays = attrs.nearest_anniversary_days;
+      if (hDays > aDays) {
+        upcoming.push({
+          icon: "mdi:calendar-blank-outline",
+          name: attrs.nearest_holiday,
+          sub: this._fmtDate(attrs.nearest_holiday_date),
+          days: attrs.nearest_holiday_days + " 天",
+          highlight: true,
+        });
+      } else if (aDays > hDays) {
+        upcoming.push({
+          icon: "mdi:cake-variant-outline",
+          name: attrs.nearest_anniversary,
+          sub: this._fmtDate(attrs.nearest_anniversary_date),
+          days: attrs.nearest_anniversary_days + " 天",
+          highlight: true,
+        });
       }
     }
 
-
-    if (attributes.hasOwnProperty('past_dates')) {
-      var past_dates = attributes['past_dates'];
-      for (var i = 0; i < past_dates.length;i++) {
-        var dict = past_dates[i];
-        list.push({'name':dict['name'],'date':dict['date'],'days':dict['description']});
-      }      
+    // 接下来的纪念日
+    if (Array.isArray(attrs.next_anniversaries)) {
+      attrs.next_anniversaries.forEach(a => {
+        upcoming.push({
+          icon: "mdi:cake-variant-outline",
+          name: a.name,
+          sub: this._fmtDate(a.date),
+          days: a.days + " 天",
+          highlight: true,
+        });
+      });
     }
 
-    var info = attributes['holiday_info']
-    if (info) {
-        list.push({'days':info});    
-      }
+    // 未来纪念日（calculate_age）
+    if (Array.isArray(attrs.future_dates)) {
+      attrs.future_dates.forEach(d => {
+        countdowning.push({
+          icon: "mdi:timer-sand",
+          name: d.name,
+          sub: this._fmtDate(d.date),
+          days: d.description,
+          highlight: true,
+        });
+      });
+    }
 
-    var last = list[list.length-1];
-    last['hiddenLine'] = true;
+    // 已过去纪念日（calculate_age）
+    if (Array.isArray(attrs.past_dates)) {
+      attrs.past_dates.forEach(d => {
+        elapsed.push({
+          icon: "mdi:history",
+          name: d.name,
+          sub: this._fmtDate(d.date),
+          days: d.description,
+          highlight: false,
+        });
+      });
+    }
 
-    this.reminderList = list;
-
+    return [
+      { title: "即将到来", items: upcoming },
+      { title: "未来时刻", items: countdowning },
+      { title: "已过纪念", items: elapsed },
+    ].filter(section => section.items.length);
   }
 
-  //transfer yyyyMMdd to yyyy-MM-dd
-  dateFormatIfNeed(date_str) {
-    const regex = /^\d{4}(0[1-9]|1[0-2])(0[1-9]|[1-2]\d|3[01])$/;
+  _renderHolidayInfo(text) {
+    if (text && typeof text === "object" && !Array.isArray(text)) {
+      return this._renderHolidayInfoDetail(text);
+    }
 
-    if (regex.test(date_str)) {
-      const formattedDate = date_str.replace(/^(\d{4})(\d{2})(\d{2})$/, '$1-$2-$3');
-      return formattedDate
-    } 
+    const rows = this._parseHolidayInfo(text);
+    if (!rows.length) {
+      return html`<div class="holiday-info-plain">${text}</div>`;
+    }
 
-    return date_str
+    return html`
+      <div class="holiday-info-list">
+        ${rows.map(row => html`
+          <div class="holiday-info-row ${row.full ? "full" : ""}">
+            ${row.full ? "" : html`<div class="holiday-info-label">${row.label}</div>`}
+            <div class="holiday-info-value">${row.value}</div>
+          </div>
+        `)}
+      </div>
+    `;
   }
 
-  getIcon(index) {
-    return `${
-      this.config.icons
-    }${
-      index
-    }.png`;
+  _renderHolidayInfoDetail(detail) {
+    const beforeRow = (detail.rows || []).find(row => row.label === "向前拼");
+    const afterRow = (detail.rows || []).find(row => row.label === "向后拼");
+    const holidayDays = this._buildDateRange(detail.start, detail.end).map(day => ({
+      ...day,
+      type: "holiday",
+      tag: "",
+    }));
+    const beforeDays = beforeRow ? this._buildDateRange(beforeRow.start, beforeRow.end).map(day => ({
+      ...day,
+      type: "leave",
+      tag: "请假",
+    })) : [];
+    const afterDays = afterRow ? this._buildDateRange(afterRow.start, afterRow.end).map(day => ({
+      ...day,
+      type: "leave",
+      tag: "请假",
+    })) : [];
+    const allDays = [...beforeDays, ...holidayDays, ...afterDays];
+    const calendar = this._buildHolidayCalendar(allDays);
+
+    return html`
+      <div class="holiday-info-list">
+        ${detail.title ? html`
+          <div class="holiday-info-row full">
+            <div class="holiday-info-value">${detail.title}</div>
+          </div>
+        ` : ""}
+        ${(detail.rows || []).length ? html`
+          <div class="holiday-plan-list">
+            <div class="holiday-plan-top">
+              <div class="holiday-plan-label">拼假日历</div>
+              <div class="holiday-plan-total">${beforeRow ? `前拼连休 ${beforeRow.total_days} 天` : ""}${beforeRow && afterRow ? " / " : ""}${afterRow ? `后拼连休 ${afterRow.total_days} 天` : ""}</div>
+            </div>
+            <div class="holiday-plan-calendar">
+              <div class="holiday-plan-weekdays">
+                ${["一", "二", "三", "四", "五", "六", "日"].map(day => html`<div class="holiday-plan-weekday">周${day}</div>`)}
+              </div>
+              <div>
+                <div class="holiday-plan-days">
+                  ${calendar.cells.map(day => html`
+                    <div class="holiday-plan-day ${day.type || "empty"}">
+                      ${day.label ? html`
+                        <div class="holiday-plan-day-date">${day.label}</div>
+                        <div class="holiday-plan-day-tag">${day.tag || ""}</div>
+                      ` : ""}
+                    </div>
+                  `)}
+                </div>
+              </div>
+            </div>
+            <div class="holiday-plan-summary">
+              ${beforeRow ? html`<strong>向前拼</strong>：请假 ${beforeRow.days} 天，可从 ${beforeRow.range} 接上 ${detail.name}，连休 ${beforeRow.total_days} 天。` : ""}
+              ${beforeRow && afterRow ? html`<br />` : ""}
+              ${afterRow ? html`<strong>向后拼</strong>：请假 ${afterRow.days} 天，可从 ${detail.range} 后接 ${afterRow.range}，连休 ${afterRow.total_days} 天。` : ""}
+            </div>
+          </div>
+        ` : ""}
+      </div>
+    `;
   }
 
-  getStateIcon(state) {
-  	var stateIcons = [{state:'工作日', icon:'working'},{state:'休息日', icon:'dating'},{state:'节假日', icon:'vacation'}];
-  	var iconName = "";
-  	
-  	stateIcons.forEach(function(item, index) {
-          if(item.state == state) {
-            iconName = item.icon;
-            return true;
+  _getHolidayInfoTitle(attrs) {
+    const holidayName = attrs.holiday_info_detail?.name || attrs.nearest_holiday;
+    return holidayName ? `${holidayName}假期安排` : "假期安排";
+  }
+
+  _parseHolidayInfo(text) {
+    if (!text || typeof text !== "string") return [];
+
+    return text
+      .split("\n")
+      .map(line => line.trim())
+      .filter(Boolean)
+      .map(line => {
+        if (!line.includes("：") && !line.includes(":")) {
+          return { full: true, value: line };
         }
-    });		
-	
-    return `${
-      this.config.icons
-    }${
-      iconName
-    }.png`;
+        const match = line.match(/^(.+?)([:：]\s*|\s+)(.+)$/);
+        if (match) {
+          return {
+            label: match[1].trim(),
+            value: match[3].trim(),
+          };
+        }
+        return { label: "说明", value: line };
+      });
   }
 
-  _fire(type, detail, options) {
-    const node = this.shadowRoot;
-    options = options || {};
-    detail = (detail === null || detail === undefined) ? {} : detail;
-    const e = new Event(type, {
-      bubbles: options.bubbles === undefined ? true : options.bubbles,
-      cancelable: Boolean(options.cancelable),
-      composed: options.composed === undefined ? true : options.composed
-    });
-    e.detail = detail;
-    node.dispatchEvent(e);
-    return e;
+  _buildDateRange(start, end) {
+    if (!start || !end) return [];
+    const result = [];
+    const current = new Date(`${start}T00:00:00`);
+    const last = new Date(`${end}T00:00:00`);
+
+    while (current <= last) {
+      result.push({
+        key: current.toISOString().slice(0, 10),
+        label: `${current.getMonth() + 1}/${current.getDate()}`,
+      });
+      current.setDate(current.getDate() + 1);
+    }
+
+    return result;
+  }
+
+  _buildHolidayCalendar(days) {
+    if (!days.length) {
+      return { cells: [] };
+    }
+
+    const cells = [];
+    const first = new Date(`${days[0].key}T00:00:00`);
+    const last = new Date(`${days[days.length - 1].key}T00:00:00`);
+    const start = new Date(first);
+    const end = new Date(last);
+
+    start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+    end.setDate(end.getDate() + (6 - ((end.getDay() + 6) % 7)));
+
+    const dayMap = new Map(days.map(day => [day.key, day]));
+    const current = new Date(start);
+
+    while (current <= end) {
+      const key = this._dateKey(current);
+      const existing = dayMap.get(key);
+      if (existing) {
+        cells.push(existing);
+      } else {
+        cells.push({
+          key,
+          label: `${current.getMonth() + 1}/${current.getDate()}`,
+          tag: "上班",
+          type: "work",
+        });
+      }
+      current.setDate(current.getDate() + 1);
+    }
+
+    return { cells };
+  }
+
+  _dateKey(date) {
+    const year = date.getFullYear();
+    const month = `${date.getMonth() + 1}`.padStart(2, "0");
+    const day = `${date.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  _stateIcon(state) {
+    return STATE_ICON[state] || "mdi:calendar-today";
+  }
+
+  _stateColor(state) {
+    return STATE_COLOR[state] || "var(--primary-color)";
+  }
+
+  _fmtDate(str) {
+    if (!str) return "";
+    // YYYYMMDD → YYYY-MM-DD
+    if (/^\d{8}$/.test(str)) {
+      return str.replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
+    }
+    return str;
   }
 
   _moreInfo() {
-    console.log('moreInfo')
-    this._fire('hass-more-info', { entityId: this.config.entity });
+    const e = new Event("hass-more-info", { bubbles: true, composed: true });
+    e.detail = { entityId: this.config.entity };
+    this.dispatchEvent(e);
+  }
+
+  getCardSize() {
+    return 4;
   }
 }
 
+customElements.define("ch_calendar-card", ChineseCalendarCard);
 
-customElements.define('ch_calendar-card', ChineseCalendarCard);
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "ch_calendar-card",
+  name: "中国节假日日历",
+  description: "显示中国法定节假日、农历、节气、纪念日倒计时等信息",
+  preview: true,
+});
