@@ -179,7 +179,7 @@ class ChineseCalendarCard extends LitElement {
 
       .countdown {
         margin: 14px var(--spacing) 0;
-        padding: 18px;
+        padding: 14px;
         border: 1px solid color-mix(in srgb, var(--divider-color, rgba(0, 0, 0, 0.08)) 72%, transparent);
         border-radius: 18px;
         background:
@@ -425,6 +425,10 @@ class ChineseCalendarCard extends LitElement {
       }
 
       .holiday-plan-list {
+        box-sizing: border-box;
+        min-width: 0;
+        max-width: 100%;
+        justify-self: start;
         padding: 14px;
         border-radius: 18px;
         background:
@@ -438,6 +442,7 @@ class ChineseCalendarCard extends LitElement {
         justify-content: space-between;
         gap: 10px;
         margin-bottom: 12px;
+        min-width: 0;
       }
 
       .holiday-plan-label {
@@ -451,18 +456,24 @@ class ChineseCalendarCard extends LitElement {
         font-size: 13px;
         font-weight: 700;
         white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .holiday-plan-total {
+        min-width: 0;
         font-size: 14px;
         font-weight: 700;
         color: var(--primary-text-color);
-        white-space: nowrap;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        text-align: right;
       }
 
       .holiday-plan-calendar {
         display: grid;
         gap: 14px;
+        min-width: 0;
       }
 
       .holiday-plan-weekdays,
@@ -470,6 +481,7 @@ class ChineseCalendarCard extends LitElement {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 10px;
+        min-width: 0;
       }
 
       .holiday-plan-weekday {
@@ -528,6 +540,9 @@ class ChineseCalendarCard extends LitElement {
         font-size: 14px;
         color: var(--primary-text-color);
         line-height: 1.7;
+        min-width: 0;
+        overflow-wrap: anywhere;
+        word-break: break-word;
       }
 
       .holiday-plan-summary strong {
@@ -543,44 +558,122 @@ class ChineseCalendarCard extends LitElement {
 
       @media (max-width: 480px) {
         :host {
-          --spacing: 14px;
+          --spacing: 12px;
           --card-radius: 18px;
         }
 
-        .hero-top,
-        .countdown,
-        .list-item {
-          grid-template-columns: none;
+        .hero {
+          padding: 18px var(--spacing) 14px;
         }
 
-        .hero-top,
-        .countdown {
-          flex-direction: column;
-          align-items: flex-start;
+        .hero-top {
+          gap: 10px;
+          align-items: center;
+        }
+
+        .date-solar {
+          font-size: clamp(24px, 6.8vw, 30px);
+        }
+
+        .date-lunar,
+        .date-week {
+          font-size: 12px;
         }
 
         .time-block {
-          text-align: left;
-          min-width: 0;
+          padding: 8px 10px;
+          min-width: 84px;
+          border-radius: 14px;
+        }
+
+        .time-now {
+          font-size: 21px;
+          letter-spacing: 0.02em;
         }
 
         .week-num {
-          text-align: left;
+          margin-top: 4px;
+          font-size: 11px;
+        }
+
+        .hero-bottom {
+          margin-top: 14px;
+          gap: 8px;
+        }
+
+        .state-badge,
+        .tag {
+          font-size: 12px;
+        }
+
+        .countdown {
+          margin-top: 12px;
+          padding: 12px;
+          gap: 12px;
+          align-items: center;
         }
 
         .countdown-days {
-          min-width: 0;
+          min-width: 74px;
+          font-size: clamp(34px, 9vw, 44px);
+        }
+
+        .countdown-unit {
+          font-size: 15px;
+        }
+
+        .countdown-label {
+          margin-bottom: 4px;
+          font-size: 11px;
+        }
+
+        .countdown-name {
+          font-size: 18px;
+        }
+
+        .countdown-date {
+          margin-top: 4px;
+          font-size: 12px;
         }
 
         .list-item {
-          grid-template-columns: 44px minmax(0, 1fr);
+          grid-template-columns: 38px minmax(0, 1fr) auto;
+          gap: 10px;
+          padding: 12px;
+        }
+
+        .item-icon {
+          width: 38px;
+          height: 38px;
+          border-radius: 12px;
+        }
+
+        .item-icon ha-icon {
+          --mdc-icon-size: 16px;
+        }
+
+        .item-name {
+          font-size: 16px;
+        }
+
+        .item-sub,
+        .item-days {
+          font-size: 12px;
         }
 
         .item-days {
-          grid-column: 1 / -1;
-          justify-self: stretch;
-          max-width: none;
-          text-align: left;
+          max-width: min(34vw, 120px);
+          padding: 7px 8px;
+        }
+
+        .section {
+          padding-left: var(--spacing);
+          padding-right: var(--spacing);
+        }
+
+        .list {
+          padding-left: 0;
+          padding-right: 0;
         }
 
         .holiday-info-row {
@@ -598,6 +691,20 @@ class ChineseCalendarCard extends LitElement {
           display: grid;
         }
 
+        .holiday-plan-list {
+          padding: 12px;
+        }
+
+        .holiday-plan-top {
+          justify-content: stretch;
+        }
+
+        .holiday-plan-total {
+          font-size: 13px;
+          line-height: 1.5;
+          text-align: left;
+        }
+
         .holiday-plan-weekdays,
         .holiday-plan-days {
           gap: 6px;
@@ -612,6 +719,35 @@ class ChineseCalendarCard extends LitElement {
           font-size: 13px;
         }
 
+      }
+
+      @media (max-width: 360px) {
+        .hero-top,
+        .countdown {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .time-block,
+        .countdown-days {
+          min-width: 0;
+        }
+
+        .time-block,
+        .week-num {
+          text-align: left;
+        }
+
+        .list-item {
+          grid-template-columns: 38px minmax(0, 1fr);
+        }
+
+        .item-days {
+          grid-column: 1 / -1;
+          justify-self: stretch;
+          max-width: none;
+          text-align: left;
+        }
       }
     `;
   }
