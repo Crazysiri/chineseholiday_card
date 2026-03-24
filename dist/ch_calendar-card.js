@@ -109,10 +109,71 @@ class ChineseCalendarCard extends LitElement {
       }
 
       .time-now {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
         font-size: 26px;
         font-weight: 600;
         font-variant-numeric: tabular-nums;
         letter-spacing: 0.04em;
+        line-height: 1;
+        min-height: 1em;
+      }
+
+      .time-main {
+        display: inline-flex;
+        align-items: center;
+        height: 1em;
+      }
+
+      .time-seconds {
+        display: inline-flex;
+        align-items: center;
+        gap: 1px;
+        min-width: 1.7em;
+        height: 1em;
+      }
+
+      .time-odo-slot {
+        position: relative;
+        width: 0.68em;
+        height: 1em;
+        overflow: hidden;
+        display: inline-block;
+        line-height: 1;
+        vertical-align: middle;
+      }
+
+      .time-odo-value,
+      .time-odo-digit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 1em;
+      }
+
+      .time-odo-value {
+        position: absolute;
+        inset: 0;
+      }
+
+      .time-odo-stack {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        animation: time-odo-slide 190ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      @keyframes time-odo-slide {
+        0% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(-1em);
+        }
       }
 
       .week-num {
@@ -158,6 +219,22 @@ class ChineseCalendarCard extends LitElement {
         color: var(--hero-subtle);
         font-size: 12px;
         font-weight: 500;
+      }
+
+      .tomorrow-state-value {
+        margin-left: 2px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.96);
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      .tomorrow-state-value.rest,
+      .tomorrow-state-value.holiday {
+        color: #0f5132;
+        background: linear-gradient(135deg, rgba(187, 247, 208, 0.95), rgba(134, 239, 172, 0.92));
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
       }
 
       .tags {
@@ -261,6 +338,37 @@ class ChineseCalendarCard extends LitElement {
         border-radius: 50%;
         background: var(--accent-color);
         box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent-color) 14%, transparent);
+        animation: section-dot-pulse 1.8s ease-out infinite;
+        transform-origin: center;
+      }
+
+      @keyframes section-dot-pulse {
+        0% {
+          transform: scale(0.92);
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-color) 26%, transparent);
+          opacity: 0.9;
+        }
+        70% {
+          transform: scale(1.12);
+          box-shadow: 0 0 0 9px color-mix(in srgb, var(--accent-color) 0%, transparent);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.92);
+          box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-color) 0%, transparent);
+          opacity: 0.9;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .section-dot {
+          animation: none;
+        }
+
+        .time-odo-stack,
+        .item-odo-stack {
+          animation: none;
+        }
       }
 
       .section-title {
@@ -311,6 +419,11 @@ class ChineseCalendarCard extends LitElement {
         word-break: break-word;
       }
 
+      .item-name-accent {
+        color: color-mix(in srgb, var(--accent-color) 72%, #f59e0b);
+        font-weight: 700;
+      }
+
       .item-sub {
         margin-top: 6px;
         font-size: 13px;
@@ -332,6 +445,81 @@ class ChineseCalendarCard extends LitElement {
         white-space: normal;
         text-align: right;
         flex-shrink: 0;
+      }
+
+      .item-days-main {
+        display: block;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.25;
+      }
+
+      .item-days-detail {
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1px;
+        margin-top: 4px;
+        min-height: 1em;
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.2;
+        color: color-mix(in srgb, currentColor 72%, transparent);
+        letter-spacing: 0.04em;
+      }
+
+      .item-days-detail-main {
+        display: inline-block;
+      }
+
+      .item-days-detail-seconds {
+        display: inline-flex;
+        align-items: center;
+        gap: 1px;
+        min-width: 2.2em;
+        height: 1em;
+      }
+
+      .item-odo-slot {
+        position: relative;
+        width: 0.62em;
+        height: 1em;
+        overflow: hidden;
+        display: inline-block;
+        line-height: 1;
+        vertical-align: baseline;
+      }
+
+      .item-odo-value,
+      .item-odo-digit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 1em;
+      }
+
+      .item-odo-value {
+        position: absolute;
+        inset: 0;
+      }
+
+      .item-odo-stack {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        animation: item-odo-slide 180ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      }
+
+      @keyframes item-odo-slide {
+        0% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(-1em);
+        }
       }
 
       .item-days.normal {
@@ -757,25 +945,141 @@ class ChineseCalendarCard extends LitElement {
       config: { type: Object },
       _hass: { type: Object },
       _time: { type: String },
+      _nowMs: { type: Number },
+      _timeSecondSlots: { type: Array },
+      _itemSecondRolling: { type: Boolean },
+      _prevTime: { type: String },
+      _prevNowMs: { type: Number },
+      _rollPhase: { type: String },
     };
   }
 
   constructor() {
     super();
-    this._time = new Date().toLocaleTimeString("zh-CN", {
+    this._ticker = null;
+    this._timeRollCleanup = null;
+    this._nowMs = Date.now();
+    this._time = this._formatNowTime(this._nowMs);
+    this._timeSecondSlots = this._buildTimeSecondSlots(this._time, this._time);
+    this._itemSecondRolling = false;
+    this._prevNowMs = this._nowMs;
+    this._prevTime = this._time;
+    this._rollPhase = "phase-a";
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._startTicker();
+  }
+
+  disconnectedCallback() {
+    this._stopTicker();
+    if (this._timeRollCleanup !== null) {
+      window.clearTimeout(this._timeRollCleanup);
+      this._timeRollCleanup = null;
+    }
+    super.disconnectedCallback();
+  }
+
+  _startTicker() {
+    this._stopTicker();
+    this._tick();
+    this._ticker = window.setInterval(() => this._tick(), 1000);
+  }
+
+  _stopTicker() {
+    if (this._ticker !== null) {
+      window.clearInterval(this._ticker);
+      this._ticker = null;
+    }
+  }
+
+  _tick() {
+    const previousTime = this._time;
+    this._prevNowMs = this._nowMs;
+    this._prevTime = this._time;
+    this._nowMs = Date.now();
+    this._time = this._formatNowTime(this._nowMs);
+    this._timeSecondSlots = this._buildTimeSecondSlots(previousTime, this._time);
+    this._itemSecondRolling = true;
+    this._rollPhase = this._rollPhase === "phase-a" ? "phase-b" : "phase-a";
+    if (this._timeRollCleanup !== null) {
+      window.clearTimeout(this._timeRollCleanup);
+    }
+    this._timeRollCleanup = window.setTimeout(() => {
+      this._timeSecondSlots = this._buildTimeSecondSlots(this._time, this._time);
+      this._itemSecondRolling = false;
+      this._timeRollCleanup = null;
+      this.requestUpdate();
+    }, 220);
+    this.requestUpdate();
+  }
+
+  _formatNowTime(nowMs) {
+    return new Date(nowMs).toLocaleTimeString("zh-CN", {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
       hour12: false,
     });
-    setInterval(() => {
-      this._time = new Date().toLocaleTimeString("zh-CN", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      });
-    }, 1000);
+  }
+
+  _splitTime(value) {
+    if (!value) return ["00:00", "00"];
+    const parts = String(value).split(":");
+    if (parts.length < 3) return [String(value), "00"];
+    return [`${parts[0]}:${parts[1]}`, parts[2]];
+  }
+
+  _buildTimeSecondSlots(previousTime, currentTime) {
+    const [, prevSeconds = "00"] = this._splitTime(previousTime);
+    const [, currSeconds = "00"] = this._splitTime(currentTime);
+    return [0, 1].map(index => ({
+      previous: prevSeconds[index],
+      current: currSeconds[index],
+      animating: prevSeconds[index] !== currSeconds[index],
+    }));
+  }
+
+  _renderTimeSecondSlots() {
+    return html`
+      ${(this._timeSecondSlots || []).map(slot => html`
+        <span class="time-odo-slot">
+          ${slot.animating ? html`
+            <span class="time-odo-stack">
+              <span class="time-odo-digit">${slot.previous}</span>
+              <span class="time-odo-digit">${slot.current}</span>
+            </span>
+          ` : html`<span class="time-odo-value">${slot.current}</span>`}
+        </span>
+      `)}
+    `;
+  }
+
+  _buildItemSecondSlots(previousSeconds, currentSeconds) {
+    const prev = String(previousSeconds ?? currentSeconds ?? "00").padStart(2, "0").slice(-2);
+    const curr = String(currentSeconds ?? previousSeconds ?? "00").padStart(2, "0").slice(-2);
+    return [0, 1].map(index => ({
+      previous: prev[index],
+      current: curr[index],
+      animating: this._itemSecondRolling && prev[index] !== curr[index],
+    }));
+  }
+
+  _renderItemSecondSlots(previousSeconds, currentSeconds) {
+    const slots = this._buildItemSecondSlots(previousSeconds, currentSeconds);
+    return html`
+      ${slots.map(slot => html`
+        <span class="item-odo-slot">
+          ${slot.animating ? html`
+            <span class="item-odo-stack">
+              <span class="item-odo-digit">${slot.previous}</span>
+              <span class="item-odo-digit">${slot.current}</span>
+            </span>
+          ` : html`<span class="item-odo-value">${slot.current}</span>`}
+        </span>
+      `)}
+    `;
   }
 
   setConfig(config) {
@@ -804,6 +1108,7 @@ class ChineseCalendarCard extends LitElement {
 
     const attrs = this._attrs;
     const state = this._entity.state;
+    const [timeMain] = this._splitTime(this._time);
 
     // 标签（节气 / 节日 / 纪念日）
     const tags = [];
@@ -828,7 +1133,10 @@ class ChineseCalendarCard extends LitElement {
               <div class="date-week">${attrs.week || ""}</div>
             </div>
             <div class="time-block">
-              <div class="time-now">${this._time}</div>
+              <div class="time-now">
+                <span class="time-main">${timeMain}:</span>
+                <span class="time-seconds">${this._renderTimeSecondSlots()}</span>
+              </div>
               <div class="week-num">第 ${attrs.week_number || "--"} 周</div>
             </div>
           </div>
@@ -837,7 +1145,12 @@ class ChineseCalendarCard extends LitElement {
             <div class="state-badge">
               <ha-icon icon="${this._stateIcon(state)}"></ha-icon>
               <span>${state}</span>
-              ${attrs.tomorrow_state ? html`<span class="tomorrow-state">明天 ${attrs.tomorrow_state}</span>` : ""}
+              ${attrs.tomorrow_state ? html`
+                <span class="tomorrow-state">
+                  明天
+                  <span class="tomorrow-state-value ${this._tomorrowStateClass(attrs.tomorrow_state)}">${attrs.tomorrow_state}</span>
+                </span>
+              ` : ""}
             </div>
 
             ${tags.length ? html`
@@ -866,10 +1179,10 @@ class ChineseCalendarCard extends LitElement {
         ${sections.map(section => this._renderSection(section))}
 
         <!-- 假期安排详情 -->
-        ${attrs.holiday_info_detail || attrs.holiday_info ? html`
+        ${attrs.holiday_info_details || attrs.holiday_info_detail || attrs.holiday_info ? html`
           <div class="holiday-info">
             <div class="holiday-info-title">${this._getHolidayInfoTitle(attrs)}</div>
-            ${this._renderHolidayInfo(attrs.holiday_info_detail || attrs.holiday_info)}
+            ${this._renderHolidayInfo(attrs.holiday_info_details || attrs.holiday_info_detail || attrs.holiday_info)}
           </div>
         ` : ""}
       </ha-card>
@@ -909,11 +1222,11 @@ class ChineseCalendarCard extends LitElement {
           <ha-icon icon="${icon}"></ha-icon>
         </div>
         <div class="item-body">
-          <div class="item-name">${item.name}</div>
+          <div class="item-name">${this._renderDecoratedName(item.name)}</div>
           ${item.sub ? html`<div class="item-sub">${item.sub}</div>` : ""}
         </div>
         ${item.days !== undefined ? html`
-          <div class="item-days ${item.highlight ? "" : "normal"}">${item.days}${item.unit || ""}</div>
+          <div class="item-days ${item.highlight ? "" : "normal"}">${this._renderItemDays(item)}</div>
         ` : ""}
       </div>
     `;
@@ -990,7 +1303,9 @@ class ChineseCalendarCard extends LitElement {
           icon: "mdi:timer-sand",
           name: d.name,
           sub: this._fmtDate(d.date),
-          days: d.description,
+          days: this._describeRelativeTime(d.date, "future") || d.description,
+          date: d.date,
+          timerType: "future",
           highlight: true,
         });
       });
@@ -1003,7 +1318,9 @@ class ChineseCalendarCard extends LitElement {
           icon: "mdi:history",
           name: d.name,
           sub: this._fmtDate(d.date),
-          days: d.description,
+          days: this._describeRelativeTime(d.date, "past") || d.description,
+          date: d.date,
+          timerType: "past",
           highlight: false,
         });
       });
@@ -1017,6 +1334,14 @@ class ChineseCalendarCard extends LitElement {
   }
 
   _renderHolidayInfo(text) {
+    if (Array.isArray(text)) {
+      return html`
+        <div class="holiday-info-list">
+          ${text.map(detail => this._renderHolidayInfoDetail(detail))}
+        </div>
+      `;
+    }
+
     if (text && typeof text === "object" && !Array.isArray(text)) {
       return this._renderHolidayInfoDetail(text);
     }
@@ -1093,7 +1418,10 @@ class ChineseCalendarCard extends LitElement {
   }
 
   _getHolidayInfoTitle(attrs) {
-    const holidayName = attrs.holiday_info_detail?.name || attrs.nearest_holiday;
+    if (Array.isArray(attrs.holiday_info_details) && attrs.holiday_info_details.length > 1) {
+      return "最近两个假期安排";
+    }
+    const holidayName = attrs.holiday_info_detail?.name || attrs.holiday_info_details?.[0]?.name || attrs.nearest_holiday;
     return holidayName ? `${holidayName}假期安排` : "假期安排";
   }
 
@@ -1212,6 +1540,126 @@ class ChineseCalendarCard extends LitElement {
       return str.replace(/^(\d{4})(\d{2})(\d{2})$/, "$1-$2-$3");
     }
     return str;
+  }
+
+  _renderDecoratedName(name) {
+    if (!name) return "";
+    const text = String(name);
+    const match = text.match(/^(.*?)(\([^()]+\)|\s+\d+(?:周岁|周年))$/);
+    if (!match) return text;
+    return html`${match[1]}<span class="item-name-accent">${match[2]}</span>`;
+  }
+
+  _tomorrowStateClass(state) {
+    if (state === "休息日") return "rest";
+    if (state === "节假日") return "holiday";
+    return "";
+  }
+
+  _parseDateTime(value) {
+    if (!value || typeof value !== "string") return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return new Date(`${value}T00:00:00`);
+    }
+    const normalized = value.replace(" ", "T");
+    const date = new Date(normalized);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  _describeRelativeTime(value, direction) {
+    const target = this._parseDateTime(value);
+    if (!target) return "";
+
+    const diffSeconds = Math.floor((target.getTime() - this._nowMs) / 1000);
+    if (direction === "future") {
+      return this._formatDuration(Math.max(diffSeconds, 0));
+    }
+    return this._formatDuration(Math.max(-diffSeconds, 0));
+  }
+
+  _formatDuration(totalSeconds) {
+    return this._formatDurationParts(totalSeconds).full;
+  }
+
+  _formatDurationParts(totalSeconds) {
+    const years = Math.floor(totalSeconds / (86400 * 365));
+    let remainder = totalSeconds % (86400 * 365);
+    const days = Math.floor(remainder / 86400);
+    remainder %= 86400;
+    const hours = Math.floor(remainder / 3600);
+    remainder %= 3600;
+    const minutes = Math.floor(remainder / 60);
+    const seconds = remainder % 60;
+
+    const majorParts = [
+      [years, "年"],
+      [days, "天"],
+    ];
+    const firstNonZeroIndex = majorParts.findIndex(([value]) => value > 0);
+    const visibleMajorParts = (firstNonZeroIndex === -1 ? [] : majorParts.slice(firstNonZeroIndex))
+      .map(([value, unit]) => `${value}${unit}`);
+    const detailParts = [
+      [hours, "时"],
+      [minutes, "分"],
+      [seconds, "秒"],
+    ];
+    const firstDetailIndex = detailParts.findIndex(([value]) => value > 0);
+    const visibleDetailParts = (firstDetailIndex === -1 ? detailParts.slice(-1) : detailParts.slice(firstDetailIndex))
+      .map(([value, unit]) => `${value}${unit}`);
+
+    return {
+      main: visibleMajorParts.join("") || "0天",
+      detail: visibleDetailParts.join(""),
+      full: `${years}年${days}天${hours}小时${minutes}分钟${seconds}秒`,
+    };
+  }
+
+  _renderItemDays(item) {
+    const days = item?.days;
+    const unit = item?.unit || "";
+    if (typeof days !== "string") {
+      return `${days}${unit || ""}`;
+    }
+
+    const durationMatch = days.match(/^(?:(\d+)年)?(?:(\d+)天)?(?:(\d+)小时)?(?:(\d+)分钟)?(?:(\d+)秒)?$/);
+    if (!durationMatch) {
+      return `${days}${unit || ""}`;
+    }
+
+    const totalSeconds =
+      (Number(durationMatch[1] || 0) * 365 * 86400) +
+      (Number(durationMatch[2] || 0) * 86400) +
+      (Number(durationMatch[3] || 0) * 3600) +
+      (Number(durationMatch[4] || 0) * 60) +
+      Number(durationMatch[5] || 0);
+    const parts = this._formatDurationParts(totalSeconds);
+    const prevSeconds = this._getItemDetailSeconds(item, this._prevNowMs);
+    const currSeconds = this._getItemDetailSeconds(item, this._nowMs);
+    const detailMatch = parts.detail.match(/^(.*?)(\d+秒)$/);
+    const detailMain = detailMatch ? detailMatch[1] : "";
+    const detailSeconds = detailMatch ? detailMatch[2] : parts.detail;
+
+    return html`
+      <span class="item-days-main">${parts.main}${unit || ""}</span>
+      <span class="item-days-detail">
+        ${detailMain ? html`<span class="item-days-detail-main">${detailMain}</span>` : ""}
+        <span class="item-days-detail-seconds">
+          ${this._renderItemSecondSlots(prevSeconds, currSeconds || detailSeconds.replace("秒", ""))}
+          <span>秒</span>
+        </span>
+      </span>
+    `;
+  }
+
+  _getItemDetailSeconds(item, nowMs) {
+    if (!item?.date || !item?.timerType || !nowMs) return null;
+    const target = this._parseDateTime(item.date);
+    if (!target) return null;
+    const diffSeconds = Math.floor((target.getTime() - nowMs) / 1000);
+    const seconds = item.timerType === "future"
+      ? Math.max(diffSeconds, 0)
+      : Math.max(-diffSeconds, 0);
+    return String(seconds % 60).padStart(2, "0");
   }
 
   _moreInfo() {
