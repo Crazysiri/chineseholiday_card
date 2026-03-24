@@ -1044,18 +1044,10 @@ class ChineseCalendarCard extends LitElement {
     const holidayDays = this._buildDateRange(detail.start, detail.end).map(day => ({
       ...day,
       type: "holiday",
-      tag: "",
+      tag: "休息",
     }));
-    const beforeDays = beforeRow ? this._buildDateRange(beforeRow.start, beforeRow.end).map(day => ({
-      ...day,
-      type: "leave",
-      tag: "请假",
-    })) : [];
-    const afterDays = afterRow ? this._buildDateRange(afterRow.start, afterRow.end).map(day => ({
-      ...day,
-      type: "leave",
-      tag: "请假",
-    })) : [];
+    const beforeDays = beforeRow ? this._buildPlanCalendarDays(beforeRow) : [];
+    const afterDays = afterRow ? this._buildPlanCalendarDays(afterRow) : [];
     const allDays = [...beforeDays, ...holidayDays, ...afterDays];
     const calendar = this._buildHolidayCalendar(allDays);
 
@@ -1135,13 +1127,31 @@ class ChineseCalendarCard extends LitElement {
 
     while (current <= last) {
       result.push({
-        key: current.toISOString().slice(0, 10),
+        // Keep keys in local time so they stay aligned with the rendered label.
+        key: this._dateKey(current),
         label: `${current.getMonth() + 1}/${current.getDate()}`,
       });
       current.setDate(current.getDate() + 1);
     }
 
     return result;
+  }
+
+  _buildPlanCalendarDays(row) {
+    if (Array.isArray(row?.calendar_days) && row.calendar_days.length) {
+      return row.calendar_days.map(day => ({
+        ...day,
+        key: day.key || this._fmtDate(day.date),
+      }));
+    }
+    if (!row?.start || !row?.end) {
+      return [];
+    }
+    return this._buildDateRange(row.start, row.end).map(day => ({
+      ...day,
+      type: "leave",
+      tag: "请假",
+    }));
   }
 
   _buildHolidayCalendar(days) {
